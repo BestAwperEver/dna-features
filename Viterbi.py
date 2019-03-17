@@ -88,7 +88,7 @@ y = 'GGCACTGCGACTACGATACGAGCATATACTGACGACGACTGACGACGACTACTACTACGAAGCTAGCTACTAGCA
 obs = [0 for i in range(len(y))]
 
 for i in range(len(y)):
-    obs[i] = obs_dict[y[i]]
+	obs[i] = obs_dict[y[i]]
 
 
 def maxT_1A(T: np.array, i, A: np.array, j):
@@ -124,6 +124,7 @@ def most_powerful_feature(obs: str, N: int, index: int) -> str:
 		i += 1
 	return feature
 
+
 def viterbi_modified(obs: str, k: int, PI, A, B):
 	# obs - наблюдения, k - количество скрытых состояний
 	# PI - начальные вероятности
@@ -157,7 +158,7 @@ output = viterbi_modified(dna, 2, (.5, .5), dna_trans, features)
 
 output = ''.join([dna_states[i] for i in output])
 
-f = open("out.txt",'w')
+f = open("out.txt", 'w')
 
 f.write(output)
 
@@ -184,4 +185,4 @@ def viterbi(obs, k, PI, A, B):
         # x[i-1] = [z[i-1]]  # вектор из 0 и 1
     return z
 
-#print(viterbi(obs, len(states), start_p, trans, emit))
+# print(viterbi(obs, len(states), start_p, trans, emit))

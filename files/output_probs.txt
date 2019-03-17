@@ -1,0 +1,2 @@
+N = 7, prob = 85.0, T = 2.5	exons prob sum: 0.061573668770614425,	intron prob sum: 0.050396118485257414
+N = 7, prob = 86.0, T = 2.5	exons prob sum: 0.05674634567094445,	intron prob sum: 0.046521618169586686
