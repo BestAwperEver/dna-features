@@ -470,12 +470,12 @@ nn2 = {}
 r = 10**4
 Ns = [7]
 #probs = [90., 91., 92., 93., 94., 95., 96., 97., 98., 99.]
-probs = [85. + i for i in range(15)]
+probs = [50. + i for i in range(50)]
 #Ts = [1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
-Ts = [2.5]
+Ts = [1.5 + 0.25*float(i) for i in range(20)]
 
 m = 100
-prob_finding = .99
+prob_finding = .999
 prob_threshold = 1 - np.power(1 - prob_finding, 1/m)
 
 def rec(str, numb):
@@ -489,6 +489,7 @@ def rec(str, numb):
 		#nn2[str+n] = s2.count(str+n)
 		rec(str+n, numb)
 
+
 def not_substring(s: str, l:list) -> bool:
 	for ss in l:
 		if len(s) > len(ss[0]):
@@ -500,7 +501,9 @@ def not_substring(s: str, l:list) -> bool:
 				return True
 	return True
 
+
 output_probs = open(path+"output_probs.txt", 'w')
+output_probs_no_header = open(path+"output_probs_nh.txt", 'w')
 
 for N in Ns:
 	for prob in probs:
@@ -513,7 +516,12 @@ for N in Ns:
 			
 			fileName = path+"features.deep-" + str(N) + ".txt"
 
-			i_f = open(path+"important.features.deep-"+str(N)+".prob-"+str(prob)+".threshold-"+str(T)+".txt", 'w')
+			i_f = open(path+"important.features.deep-"+str(N)
+					   +".m-"+str(m)
+					   +".prob-find-"+str(prob_finding)
+					   +".prob-"+str(prob)
+					   +".threshold-"+str(T)
+					   +".txt", 'w')
 			important_features = []
 
 			if os.path.isfile(fileName):
@@ -544,9 +552,10 @@ for N in Ns:
 					i_f.write(a+' '+str(p_ex)+' '+str(int_ex)+' '+str(p_in)+' '+str(int_in)+'\n')
 					#i_f.write(a+':\tex = '+str(p_ex)+'+-'+str(int_ex)+'\tintr = '+str(p_in)+'+-'+str(int_in)+'\n')
 				i_f.write("exons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum))
-				if min(ex_sum, in_sum) > prob_threshold and max(ex_sum, in_sum) < prob_threshold*2:
+				if min(ex_sum, in_sum) > prob_threshold:# and max(ex_sum, in_sum) < prob_threshold*2:
 					output_probs.write("N = "+str(N)+", prob = "+str(prob)+", T = "+str(T)+
 						"\texons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum)+'\n')
+					output_probs_no_header.write(str(prob) + ' ' + str(T) + '\n')
 				print("exons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum))
 
 				f.close()
@@ -604,8 +613,14 @@ for N in Ns:
 					i_f.write(a+' '+str(p_ex)+' '+str(int_ex)+' '+str(p_in)+' '+str(int_in)+'\n')
 				# i_f.write("exons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum))
 				if min(ex_sum, in_sum) > prob_threshold:
-					output_probs.write("N = "+str(N)+", prob = "+str(prob)+", T = "+str(T)+
-					   "\texons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum)+'\n')
+					output_probs.write(
+						"N = "+str(N)
+						+", prob = "+str(prob)
+						+", T = "+str(T)
+					    +"\texons prob sum: "+str(ex_sum)
+						+",\tintron prob sum: "+str(in_sum)
+						+'\n')
+					output_probs_no_header.write(str(prob) + ' ' + str(T) + '\n')
 				print("exons prob sum: "+str(ex_sum)+",\tintron prob sum: "+str(in_sum))
 
 				f.close()
@@ -613,6 +628,7 @@ for N in Ns:
 			i_f.close()
 
 output_probs.close()
+output_probs_no_header.close()
 			# print(int(a*100),int(c*100),int(g*100),int(t*100))
 
 			# 37 16 18 27 ex
