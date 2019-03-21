@@ -87,6 +87,44 @@ def get_subset_docs(filePath, min_l, max_l):
     return exons, introns
 
 
+def get_entropy(p):
+    assert p >=0 and p <= 1
+    if p < 10e-10 or p > 1-10e-10:
+        return 0
+    return -p*log(p)-(1-p)*log(1-p)
+
+
+def get_sum_entropy(clf, dnas):
+    sum_len = sum([len(s) for s in dnas])
+    probs = clf.predict_proba(dnas).T[0].tolist()
+    h = 0
+    for i in range(len(dnas)):
+        h += get_entropy(probs[i])*float(len(dnas[i]))/sum_len
+    return h, probs
+
+
+def optimal_split(s:str, clf):
+    ig = 0
+    h0 = get_entropy(clf.predict_proba([s])[0][0])
+    i0 = 0
+    probs0 = []
+    for i in range(len(s)):
+        h, probs = get_sum_entropy(clf, [s[:i], s[i:]])
+        h /= len(s)
+        if h0 - h > ig:
+            ig = h0 - h
+            i0 = i
+            probs0 = probs
+    return s[:i0], s[i0:], probs0
+
+
+def split_rec(s:str, clf):
+    s1, s2, probs = optimal_split(s, clf)
+    if len(s1) == 0:
+        return [s2]
+    return split_rec(s1) + split_rec(s2)
+
+
 exons, introns = get_subset_docs(r"C:\Users\admin\PycharmProjects\dna\files\dna.txt", 1, 7)
 # data = pd.DataFrame(data=np.array([exons+introns,
 #                           np.concatenate((np.ones_like(exons, dtype=np.int8),
@@ -109,7 +147,7 @@ exons, introns = get_subset_docs(r"C:\Users\admin\PycharmProjects\dna\files\dna.
 # print("F-score: ", sum(f1_scores)/len(f1_scores))
 
 important_features = []
-with open(r"C:\Users\admin\PycharmProjects\dna\files\important.features.deep-7.prob-85.0.threshold-2.5.txt", 'r') as f:
+with open(r"C:\Users\admin\PycharmProjects\dna\files\important.features.deep-7.m-100.prob-find-0.999.prob-72.0.threshold-3.0.txt", 'r') as f:
     for line in f:
         if line[0] != 'e':
             important_features.append(line.split()[0])
@@ -129,3 +167,33 @@ for s in introns:
         if ss in important_features:
             s_imp.append(ss)
     introns_only_important.append(s_imp)
+
+test_dna = "agataaaaatagtaaagatattcatatttatacagctttacaagttgaaacatcctttca\
+tttatgaagaattaaaaggggtaccctttttagagaaaaggagagcatgtaaacttcgag\
+gaaattgatatgtataattttataaaacagggcttgcgcttttttttttttgagacagag\
+tttcgctcttgttgcccaggctggagtgcaatggtgcaacctcggctcaccgcaacctcc\
+tcctcccgagttcaagtgattctcctgcctcagcctgctgaatagctgggattacaggca\
+tgtgccaccacacctggctacttttgtgttttttttacttttatatattttttttttgtt\
+tagtagagacagggtttctccattttggtcaggctggtcttgaactcccgacctcagatg\
+atctgcccgcctcagcctcccaaagtgctgggattacaggcgtgagccactgtgcctggc\
+caggggttgtgctttttaaatttcaattttatttttgctaagtatttattctttgatag\
+TTCATGTTTTGGGAAAAGAACAGGCTTCACCTAAAAACGTAAAAATGGAAATTGGTAAAA\
+CTGAAACTTTTTCTGATGTTCCTGTGAAAACAAATATAGAAGTTTGTTCTACTTACTCCA\
+AAGATTCAGAAAACTACTTTGAAACAGAAGCAGTAGAAATTGCTAAAGCTTTTATGGAAG\
+ATGATGAACTGACAGATTCTAAACTGCCAAGTCATGCCACACATTCTCTTTTTACATGTC\
+CCGAAAATGAGGAAATGGTTTTGTCAAATTCAAGAATTGGAAAAAGAAGAGGAGAGCCCC\
+TTATCTTAGTGGGAGAACCCTCAATCAAAAGAAACTTATTAAATGAATTTGACAGGATAATAGAAAATCAAG\
+AAAAATCCTTAAAGGCTTCAAAAAGCACTCCAGATG\
+GCACAATAAAAGATCGAAGATTGTTTATGCATCATGTTTCTTTAGAGCCGATTACCTGTG\
+TACCCTTTCG"
+
+
+text_clf = Pipeline([('vect', CountVectorizer()),
+                     ('tfidf', TfidfTransformer()),
+                     ('clf', MultinomialNB()),
+])
+
+data_imp = pd.DataFrame(data=np.array([exons_only_important+introns_only_important,
+                          np.concatenate((np.ones_like(exons_only_important, dtype=np.int8),
+                                          np.zeros_like(introns_only_important, dtype=np.int8))).tolist()]).T,
+                    columns=['dna', 'exon'])
